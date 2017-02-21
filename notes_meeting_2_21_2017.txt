@@ -1,0 +1,23 @@
+Steps to solving the homework:
+
+1. Connect to cello via the cello API.
+2. Receive the genetic circuit output from cello
+
+3. What we actually think we have to do.
+
+We need to identify which repressors in the circuit have the greatest effect on the score. Then from their use the functions described
+in the resources for this homework to optimize the score by changing these repressors.
+
+Questions:
+
+Is this what we actually have to do?
+If so, how do we identify these repressors?
+What effect does each individual operation have on a repressor?
+
+
+Tomorrow after class 2/22/2017. Meet to discuss these questions and have them answered to a certain extent.
+
+Goal: By: 2/24/2017 have the understanding to develop a plan of attack to start coding, prior to 2 pm on friday.(ideally)
+
+Meet at 1pm Friday to discuss then revise with Prushant.
+
