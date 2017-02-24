@@ -42,18 +42,20 @@ def weaker_rbs(rpr,x): rpr['k'] = rpr['k']*x
 def score():
 	s1_column = y(s1,pTet)
 	print("S1 score:", s1_column[0]/s1_column[1])
+	print(s1_column)
 	p1_column = y(p1,(pLuxStar+s1_column))
-	print("Circuit score:", p1_column[1]/p1_column[3], end="\n\n")
-	return p1_column[1]/p1_column[3]
+	print("Circuit score:", p1_column[1]/np.amax([p1_column[0],p1_column[2:3]]))
+	print(p1_column, end="\n\n")
+
+	return p1_column[1]/np.amax([p1_column[0],p1_column[2:3]])
 
 print("===Before===")
 before = score()
-stronger_promoter(s1,10**-5)
+
+weaker_promoter(s1,10)
+#stronger_promoter(p1,10)
 
 print("===After===")
 after = score()
 
 print("Gain:",after/before)
-
-
-
