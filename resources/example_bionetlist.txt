@@ -1,0 +1,5 @@
+pLuxStar        0011
+pTet            0101
+P1_PhlF         pSrpR     pLuxStar  
+S1_SrpR         pTet      
+YFP             pPhlF     

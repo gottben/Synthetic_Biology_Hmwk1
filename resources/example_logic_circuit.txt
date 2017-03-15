@@ -1,0 +1,40 @@
+
+----- Logic Circuit #0 -----
+OUTPUT      0100              YFP               0  (1)         215.11  tox:0.89
+NOT         1010              S1_SrpR           2  (3)         432.17  tox:0.92
+NOR         0100              P1_PhlF           1  (2,4)       215.11  tox:0.97
+INPUT       0101              pTet              3              3384.62
+INPUT       0011              pLuxStar          4               12.40
+
+Circuit_score = 215.10764    Cell_growth = 0.88769 
+
+YFP  Gate=215.10764
+     OUTPUT          [ 0 0 ]: 0                  0.010:  0.004    multiplied_tox: 1.00
+     OUTPUT          [ 1 0 ]: 1                  2.222:  0.889    multiplied_tox: 0.89
+     OUTPUT          [ 0 1 ]: 0                  0.010:  0.004    multiplied_tox: 1.00
+     OUTPUT          [ 1 1 ]: 0                  0.010:  0.004    multiplied_tox: 0.92
+
+S1_SrpR  Gate=432.16762
+        NOT    1     [ 0 0 ]: 1                  0.001:  1.297    individual_tox: 1.00
+        NOT    1     [ 1 0 ]: 0                  4.400:  0.003    individual_tox: 0.92
+        NOT    1     [ 0 1 ]: 1                  0.001:  1.297    individual_tox: 1.00
+        NOT    1     [ 1 1 ]: 0                  4.400:  0.003    individual_tox: 0.92
+
+P1_PhlF  Gate=215.10764
+        NOR    2     [ 0 0 ]: 0          1.297   0.025:  0.010    individual_tox: 1.00
+        NOR    2     [ 1 0 ]: 1          0.003   0.025:  2.222    individual_tox: 0.97
+        NOR    2     [ 0 1 ]: 0          1.297   0.310:  0.010    individual_tox: 1.00
+        NOR    2     [ 1 1 ]: 0          0.003   0.310:  0.010    individual_tox: 1.00
+
+pTet  Gate=3384.61538
+      INPUT          [ 0 0 ]: 0                       :  0.001
+      INPUT          [ 1 0 ]: 1                       :  4.400
+      INPUT          [ 0 1 ]: 0                       :  0.001
+      INPUT          [ 1 1 ]: 1                       :  4.400
+
+pLuxStar  Gate=12.40000
+      INPUT          [ 0 0 ]: 0                       :  0.025
+      INPUT          [ 1 0 ]: 0                       :  0.025
+      INPUT          [ 0 1 ]: 1                       :  0.310
+      INPUT          [ 1 1 ]: 1                       :  0.310
+

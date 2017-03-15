@@ -1,0 +1,48 @@
+
+----- Logic Circuit #0 -----
+OUTPUT      0001              YFP               0  (1)         328.00  tox:0.88
+NOT         1100              A1_AmtR           3  (4)          51.00  tox:0.96
+NOT         1010              S2_SrpR           2  (5)         697.50  tox:0.92
+NOR         0001              P3_PhlF           1  (3,2)       328.00  tox:0.99
+INPUT       0011              pBAD              4              304.88
+INPUT       0101              pTet              5              3384.62
+
+Circuit_score = 328.00218    Cell_growth = 0.87749 
+
+YFP  Gate=328.00218
+     OUTPUT          [ 0 0 ]: 0                  0.020:  0.008    multiplied_tox: 1.00
+     OUTPUT          [ 0 1 ]: 0                  0.020:  0.008    multiplied_tox: 0.92
+     OUTPUT          [ 1 0 ]: 0                  0.021:  0.008    multiplied_tox: 0.96
+     OUTPUT          [ 1 1 ]: 1                  6.739:  2.695    multiplied_tox: 0.88
+
+A1_AmtR  Gate=50.99729
+        NOT    1     [ 0 0 ]: 1                  0.008:  3.683    individual_tox: 1.00
+        NOT    1     [ 0 1 ]: 1                  0.008:  3.683    individual_tox: 1.00
+        NOT    1     [ 1 0 ]: 0                  2.500:  0.072    individual_tox: 0.96
+        NOT    1     [ 1 1 ]: 0                  2.500:  0.072    individual_tox: 0.96
+
+S2_SrpR  Gate=697.50448
+        NOT    1     [ 0 0 ]: 1                  0.001:  2.100    individual_tox: 1.00
+        NOT    1     [ 0 1 ]: 0                  4.400:  0.003    individual_tox: 0.92
+        NOT    1     [ 1 0 ]: 1                  0.001:  2.100    individual_tox: 1.00
+        NOT    1     [ 1 1 ]: 0                  4.400:  0.003    individual_tox: 0.92
+
+P3_PhlF  Gate=328.00218
+        NOR    2     [ 0 0 ]: 0          3.683   2.100:  0.020    individual_tox: 1.00
+        NOR    2     [ 0 1 ]: 0          3.683   0.003:  0.020    individual_tox: 1.00
+        NOR    2     [ 1 0 ]: 0          0.072   2.100:  0.021    individual_tox: 1.00
+        NOR    2     [ 1 1 ]: 1          0.072   0.003:  6.739    individual_tox: 0.99
+
+pBAD  Gate=304.87805
+      INPUT          [ 0 0 ]: 0                       :  0.008
+      INPUT          [ 0 1 ]: 0                       :  0.008
+      INPUT          [ 1 0 ]: 1                       :  2.500
+      INPUT          [ 1 1 ]: 1                       :  2.500
+
+pTet  Gate=3384.61538
+      INPUT          [ 0 0 ]: 0                       :  0.001
+      INPUT          [ 0 1 ]: 1                       :  4.400
+      INPUT          [ 1 0 ]: 0                       :  0.001
+      INPUT          [ 1 1 ]: 1                       :  4.400
+
+
