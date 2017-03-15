@@ -55,8 +55,8 @@ elif case == 5:
 elif case == 6:
     # 6th case: Get the contents of a specified file
     ID = username + '_Circuit'
-    filename = ID+'_A000'+'_logic' + '_circuit.txt'
-    filename2 = ID + '_A000'+'_bionetlist.txt'
+    filename = ID + '_A000' + '_logic' + '_circuit.txt'
+    filename2 = ID + '_A000' + '_bionetlist.txt'
     filename3 = ID + '_inputs.txt'
     filename4 = ID + '_outputs.txt'
     url = 'http://cellocad.org/results/' + ID + '/' + filename4
@@ -74,19 +74,24 @@ elif case == 6:
 with open('gottbenn.UCF.json') as initial_UCF:
     original_UCF = json.load(initial_UCF)
 
-print(original_UCF[23:44])
-
 # Lets get all the known promoters in the UCF file, this should make it easier
 # to identify if one of these promoters is being used in the circuit.
-gate_names = []
+gate_info = []
 for info in original_UCF[23:44]:
     # save all the gate_names in an array.
-    gate_names += [info['gate_name']]
-
+    gate = []
+    for key in info.keys():
+        if key == 'gate_name':
+            gate += [info[key]]
+        elif key == 'variables':
+            gate += [info[key]]
+        elif key == 'parameters':
+            gate += [info[key]]
+    gate_info += [gate]
 # Next step is to look for the promoters that are used in this circuit.
 # For this we will look at getting the contents of the _logic_circuit.txt file.
 ID = username + '_Circuit'
-filename = ID+'_A000'+'_logic' + '_circuit.txt'
+filename = ID + '_A000' + '_logic' + '_circuit.txt'
 url = 'http://cellocad.org/results/' + ID + '/' + filename
 req = requests.get(url, auth=auth)
 scores = open('scores.txt', 'w')
@@ -103,11 +108,10 @@ for line in open('scores.txt', 'r'):
     if 'Circuit_score' in line:
         circuit_score = line[15:25]
         count = 0
-    for gates in gate_names:
-        if 'Gate' in line:
-            index = line.index('Gate')
-            gates_in_circuit += [(gates, line[index+5: index+15])]
-
+    if 'Gate' in line:
+        index = line.index('Gate')
+        gates_in_circuit += [(line[0: index].replace(" ", ""),
+                              line[index + 5: index + 15])]
 # get the set of all the gates in the circuit
 # this guarantees I am not accidentally reproducing
 # gates in the circuit.
@@ -160,4 +164,18 @@ for gate in gates_in_circuit:
     if gate[0] in dict_of_circuit:
         dict_of_circuit[gate[0]]['score'] = gate[1][0:len(gate[1]) - 2]
 
-print(dict_of_circuit)
+for key in dict_of_circuit.keys():
+    for line in gate_info:
+        if key in line:
+            for element in line:
+                print(line)
+                if len(element) == 1:
+                    dict_of_circuit[key]['on_threshold'] = element[
+                        0]['on_threshold']
+                    dict_of_circuit[key]['off_threshold'] = element[
+                        0]['off_threshold']
+                if len(element) == 4:
+                    dict_of_circuit[key]['ymax'] = element[0]['value']
+                    dict_of_circuit[key]['ymin'] = element[1]['value']
+                    dict_of_circuit[key]['K'] = element[2]['value']
+                    dict_of_circuit[key]['n'] = element[3]['value']
