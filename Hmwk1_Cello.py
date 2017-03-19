@@ -74,6 +74,8 @@ elif case == 6:
 with open('gottbenn.UCF.json') as initial_UCF:
     original_UCF = json.load(initial_UCF)
 
+print(original_UCF[23:44])
+
 # Lets get all the known promoters in the UCF file, this should make it easier
 # to identify if one of these promoters is being used in the circuit.
 gate_info = []
@@ -370,25 +372,14 @@ circuit_forward_prop(circuit_properties)
 # I don't know yet how we are going to modify the UCF file to
 # show different values.
 
-# for info in range(23, 44):
-#     # original_UCF[23:44]:
-#     # save all the gate_names in an array.
-#     gate = []
-#     for key in original_UCF[info]:
-#         if key == 'gate_name':
-#             gate += [info[key]]
-#         elif key == 'variables':
-#             gate += [info[key]]
-#         elif key == 'parameters':
-#             gate += [info[key]]
-#     gate_info += [gate]
+for info in range(23, 44):
+    for item in circuit_properties:
+        if original_UCF[info]['gate_name'] == item[0]:
+            params = original_UCF[info]['parameters']
+            for x in range(0, len(params)):
+                for y in item:
+                    if original_UCF[info]['parameters'][x]['name'] == y[0]:
+                        original_UCF[info]['parameters'][x]['value'] == y[1]
 
-# the_input = [x for t in input_list for x in t]
-# r = int(len(the_input) / 2)
-# x_list = list(combinations(the_input, r))
-
-# for item in input_list:
-#     if item in x_list:
-#         x_list.remove(item)
-
-# print(x_list)
+with open('new.UCF.json', 'w') as outfile:
+    json.dump(original_UCF, outfile)
