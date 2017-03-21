@@ -4,6 +4,10 @@ import json
 import numpy as np
 from requests.auth import HTTPBasicAuth
 from itertools import zip_longest
+<<<<<<< HEAD
+=======
+
+>>>>>>> be1470fd21cd74cc6568e56d59693799d7dfc4a7
 # The first step of this code is to develop a program that can connect to
 # Cello.
 
@@ -336,7 +340,11 @@ def grouper(iterable, n, fillvalue=None): # From Python Recipes
 
 # Converts a linear array to [("gatename", ('K', value), ('ymin', value) ... ),(...)] form which can be used to update dictionary
 # This only works if we assume that the dict_of_circuit order is always the same
+<<<<<<< HEAD
 def convert_parameter_array_to_tuples(params, dict_of_circuit):
+=======
+def convert_parameter_array_to_tuples(params,dict_of_circuit):
+>>>>>>> be1470fd21cd74cc6568e56d59693799d7dfc4a7
     print(dict_of_circuit)
     gates = [gatename for gatename,values in dict_of_circuit.items() if len(values) > 4] # Name of gates that aren't the initial input
     params_per_gate = grouper(params,4) # Groups the linear array into tuples of size 4 ex: [1,2,3,4,5,6,7,8] --> (1,2,3,4), (5,6,7,8)
