@@ -333,13 +333,18 @@ def circuit_forward_prop(parameters):
                 for item in input_list:
                     if item in x_list:
                         x_list.remove(item)
-                y_values = []
+                on_values = []
+                off_values = []
                 for b_x in x_list:
                     x = sum(b_x)
-                    y_values += [y_min + (y_max - y_min) / (1 + (x / k)**n)]
-        dict_of_circuit[ele[1][0]]['ymin'] = min(y_values)
-        dict_of_circuit[ele[1][0]]['ymax'] = max(y_values)
-        score = max(y_values) / min(y_values)
+                    the_y = y_min + (y_max - y_min) / (1 + (x / k)**n)
+                    if the_y > (y_max/2):
+                        on_values += [the_y]
+                    elif the_y < (y_min*2):
+                        off_values += [the_y]
+        dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
+        dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
+        score = min(on_values) / max(off_values)
     print(score)
     print(dict_of_circuit[ele[1][0]]['score'])
 
