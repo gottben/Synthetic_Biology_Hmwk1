@@ -287,31 +287,32 @@ def grouper(iterable, n, fillvalue=None):
 def convert_parameter_array_to_tuples(params, dict_of_circuit):
     gates = [gatename for gatename, values in dict_of_circuit.items() if len(
         values) > 4]  # Name of gates that aren't the initial input
-    # Groups the linear array into tuples of size 4 ex: [1,2,3,4,5,6,7,8] -->
-    # (1,2,3,4), (5,6,7,8)
     params_per_gate = grouper(params, 4)
     dict_values = [(gatename,) + tuple(zip(['n', 'K', 'ymax', 'ymin'],
                                            gate_params))
                    for gatename, gate_params in zip(gates, params_per_gate)]
-    return dict_values
+
+    # Updates dict_of_circuit
+    for x in dict_values:
+        for y in x:
+            if isinstance(y, tuple):
+                dict_of_circuit[x[0]][y[0]] = y[1]
+
+    return dict_of_circuit
 
 # -----------------------------------------------------------------------------------#
 # Recreates the genetic circuit using forward propagation          #
 # -----------------------------------------------------------------------------------#
 
 
-def circuit_forward_prop(parameters):
-    global dict_of_circuit
+def circuit_forward_prop(parameters,dict_of_circuit):
     global circ_list
 
-    parameter_list = (convert_parameter_array_to_tuples(parameters,
-                                                        dict_of_circuit))
 
-    # update the dict_of_circuit
-    for x in parameter_list:
-        for y in x:
-            if isinstance(y, tuple):
-                dict_of_circuit[x[0]][y[0]] = y[1]
+    if isinstance(parameters,dict):
+        dict_of_circuit = parameters
+    else:
+        dict_of_circuit = (convert_parameter_array_to_tuples(parameters,dict_of_circuit))
 
     for ele in circ_list:
         count = 1
@@ -347,10 +348,11 @@ def circuit_forward_prop(parameters):
         score = min(on_values) / max(off_values)
     print(score)
     print(dict_of_circuit[ele[1][0]]['score'])
+    return -1 * score
 
 
 # ---------------------------------------------------------------------------#
 # Run the functions that were made previously                  #
 # ---------------------------------------------------------------------------#
 parameters = create_parameters_array(dict_of_circuit)
-circuit_forward_prop(parameters)
+circuit_forward_prop(parameters,dict_of_circuit)
