@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 from requests.auth import HTTPBasicAuth
+from itertools import zip_longest
 
 # The first step of this code is to develop a program that can connect to
 # Cello.
@@ -328,14 +329,47 @@ circuit_properties = [('pTet', ('ymin', 0.001), ('ymax', 4.4)),
                       ('A1_AmtR', ('ymin', 0.06), ('ymax', 3.8))]
 
 
-def circuit_forward_prop(circuit_properties):
+# Converts the dict of circuit to a linear array of parameters
+def create_parameters_array(dict_of_circuit):
+    # This assumes that the dictionary is in the same order always
+    # According to some random person on StackOverflow, the order is usually the same but not guaranteed so we may want to switch to using ordered dicts?
+    # Or maybe consider changing it to a list of dictionaries b/c the order is guaranteed
+    gates = [{gatename:values} for gatename,values in dict_of_circuit.items() if len(values) > 4] # Get only the gates that are not the initial inputs
+    params = np.array([[gatevalues['n'], gatevalues['K'], gatevalues['ymax'], gatevalues['ymin']] for gate in gates for gatename, gatevalues in gate.items()]) # list of lists for each gate
+    flat_params = params.flatten() # creates linear array
+    return flat_params
+
+
+def grouper(iterable, n, fillvalue=None): # From Python Recipes
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
+# Converts a linear array to [("gatename", ('K', value), ('ymin', value) ... ),(...)] form which can be used to update dictionary
+# This only works if we assume that the dict_of_circuit order is always the same
+def convert_parameter_array_to_tuples(params,dict_of_circuit):
+    print(dict_of_circuit)
+    gates = [gatename for gatename,values in dict_of_circuit.items() if len(values) > 4] # Name of gates that aren't the initial input
+    params_per_gate = grouper(params,4) # Groups the linear array into tuples of size 4 ex: [1,2,3,4,5,6,7,8] --> (1,2,3,4), (5,6,7,8)
+    dict_values = [(gatename,) + tuple(zip(['n', 'K', 'ymax', 'ymin'],gate_params)) for gatename, gate_params in zip(gates, params_per_gate)] # Combines gate names w gate parameters
+    return dict_values
+
+# The input needs to be the parameters of the circuit
+# circuit_properties = the initial input to the circuit
+def circuit_forward_prop(parameters, circuit_properties):
     global dict_of_circuit
     global circ_list
+
+    parameter_list = convert_parameter_array_to_tuples(parameters,dict_of_circuit) + circuit_properties
+
     # update the dict_of_circuit
-    for x in circuit_properties:
+    for x in parameter_list:
         for y in x:
             if isinstance(y, tuple):
+                print(dict_of_circuit[x[0]][y[0]], y[1])
                 dict_of_circuit[x[0]][y[0]] = y[1]
+
     for ele in circ_list:
         count = 1
         for item in ele[1]:
@@ -366,7 +400,8 @@ def circuit_forward_prop(circuit_properties):
     print(score)
     print(dict_of_circuit[ele[1][0]]['score'])
 
-circuit_forward_prop(circuit_properties)
+parameters = create_parameters_array(dict_of_circuit)
+circuit_forward_prop(parameters, circuit_properties)
 
 
 # I don't know yet how we are going to modify the UCF file to
