@@ -4,6 +4,7 @@ import json
 import numpy as np
 from requests.auth import HTTPBasicAuth
 from itertools import zip_longest
+import re
 
 
 # Setup the username and password for Cello Authentication
@@ -103,7 +104,7 @@ for line in table:
         list_of_identities += [identity.split()]
 
 # -----------------------------------------------------------#
-#  Put the circuit info    into a dictionary           #
+#  Put the circuit info into a dictionary                    #
 # -----------------------------------------------------------#
 dict_of_circuit = {}
 for sub_list in list_of_identities:
@@ -136,6 +137,15 @@ for key in dict_of_circuit.keys():
     dict_of_circuit[key]['ID'] = int(dict_of_circuit[key]['ID'])
     list_of_circ_elements += [(key, dict_of_circuit[key]['ID'])]
 
+
+# ------------------------------------------------------#
+# Add digital logic information to dict of circuit       #
+# ------------------------------------------------------#
+scores_txt = open('scores.txt').read()
+p = re.compile(r'([0-1]{4})\s+(\w+)')
+matches = re.findall(p,scores_txt)
+info = [(name, {'logic':[int(d) for d in logic]}) for logic, name in matches]
+[dict_of_circuit[t[0]].update(t[1]) for t in info] 
 
 # ------------------------------------------------------#
 # Add the input ymax and ymin to dict       #
@@ -261,7 +271,7 @@ def combinations(iterable, r):
 
 def create_parameters_array(dict_of_circuit):
     gates = [{gatename: values} for gatename, values in dict_of_circuit.items(
-    ) if len(values) > 4]  # Get only the gates that are not the initial inputs
+    ) if len(values) > 5]  # Get only the gates that are not the initial inputs
     params = np.array([[gatevalues['n'], gatevalues['K'], gatevalues['ymax'],
                         gatevalues['ymin']] for gate in gates for gatename,
                        gatevalues in gate.items()])
@@ -286,7 +296,7 @@ def grouper(iterable, n, fillvalue=None):
 
 def convert_parameter_array_to_tuples(params, dict_of_circuit):
     gates = [gatename for gatename, values in dict_of_circuit.items() if len(
-        values) > 4]  # Name of gates that aren't the initial input
+        values) > 5]  # Name of gates that aren't the initial input
     params_per_gate = grouper(params, 4)
     dict_values = [(gatename,) + tuple(zip(['n', 'K', 'ymax', 'ymin'],
                                            gate_params))
@@ -303,7 +313,6 @@ def convert_parameter_array_to_tuples(params, dict_of_circuit):
 # -----------------------------------------------------------------------------------#
 # Recreates the genetic circuit using forward propagation          #
 # -----------------------------------------------------------------------------------#
-
 
 def circuit_forward_prop(parameters,dict_of_circuit):
     global circ_list
@@ -331,6 +340,7 @@ def circuit_forward_prop(parameters,dict_of_circuit):
                                    dict_of_circuit[item]['ymax'])]
                 the_input = [x for t in input_list for x in t]
                 x_list = list(combinations(the_input, int(len(the_input) / 2)))
+                print(x_list)
                 for item in input_list:
                     if item in x_list:
                         x_list.remove(item)
@@ -343,11 +353,12 @@ def circuit_forward_prop(parameters,dict_of_circuit):
                         on_values += [the_y]
                     elif the_y < (y_min*2):
                         off_values += [the_y]
-        dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
-        dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
+
+        #dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
+        #dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
         score = min(on_values) / max(off_values)
-    print(score)
-    print(dict_of_circuit[ele[1][0]]['score'])
+    #print(score)
+    #print(dict_of_circuit[ele[1][0]]['score'])
     return -1 * score
 
 

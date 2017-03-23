@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.optimize import minimize
 import pickle
-from operations import *
 from Cello_scorer import *
+from operations import *
 import copy
 from collections import defaultdict
 
@@ -22,16 +22,19 @@ def choose_operations(dict_of_circuit, dict_of_target):
 	best_params = create_parameters_array(dict_of_circuit)
 	best_dict = convert_parameter_array_to_tuples(best_params, dict_of_circuit)
 	best_score = -1*circuit_forward_prop(best_dict,copy.deepcopy(dict_of_circuit))
+
 	for idx,rpr in enumerate(copy.deepcopy(init)):
-		print("CURRENT RPR", idx)
 		for i in range(1,100000): # Replace w convergence fxn and while loop
 			current_target = dict_of_target[rpr[0]] #rpr[0] is the gatename of the rpr that we're currently attempting to modify
 			op = np.random.choice(ops, p=weights)
 
-			pot_rpr_values, current_chosen = op(copy.deepcopy(best_rprs[idx][1]),current_target)
+			pot_rpr, current_chosen = op(copy.deepcopy(best_rprs[idx]),current_target)
+
+			if current_chosen == ():
+				continue
 
 			pot_best_rprs = copy.deepcopy(best_rprs)
-			pot_best_rprs[idx] = (rpr[0], pot_rpr_values)
+			pot_best_rprs[idx] = pot_rpr
 			best_dict = dict(pot_best_rprs)
 			best_dict.update(input_info)
 
@@ -41,32 +44,32 @@ def choose_operations(dict_of_circuit, dict_of_target):
 				print("Score:", new_score)
 				print(current_chosen)
 
-				best_rprs[idx] = (rpr[0], pot_rpr_values)
+				best_rprs[idx] = pot_rpr
 				print("Iterate:",best_rprs)
 				chosen[rpr[0]].append(current_chosen)
 				best_score = new_score
 
 	return best_rprs, chosen, new_score
 
+
 def main():
 	'''
 	parameters = create_parameters_array(dict_of_circuit)
 	num_of_gates = sum([1 for gatename,values in dict_of_circuit.items() if len(values) > 4])
 	bounds = ((0,None),) * (num_of_gates*4) # You need a bound for every parameter, each gate has 4 parameters ~
-	res = minimize(circuit_forward_prop, parameters, method='L-BFGS-B', bounds=bounds, options={'disp': False})
-
+	res = minimize(circuit_forward_prop, parameters, args=dict_of_circuit, method='L-BFGS-B', bounds=bounds, options={'disp': True})
 	dict_of_target = convert_parameter_array_to_tuples(res.x,copy.deepcopy(dict_of_circuit))
-	'''
 
+	'''
 	dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )
 	newvals,chosen_operations,new_score = choose_operations(dict_of_circuit, dict_of_target)
 
-	orig_score = -1*circuit_forward_prop(dict_of_circuit,copy.deepcopy(dict_of_circuit))
+	orig_score = -1*circuit_forward_prop(dict_of_circuit,None)
 
 	print("Original score:", orig_score)
 	print("New score:", new_score)
 	print("Gain:", new_score/orig_score)
 
-
 if __name__ == '__main__':
-	main()
+	#main()
+	dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )
