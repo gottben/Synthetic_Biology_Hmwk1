@@ -81,6 +81,7 @@ def is_converged(rpr, target):
 
 
 def main():
+<<<<<<< HEAD
     parameters = create_parameters_array(dict_of_circuit)
     num_of_gates = sum(
         [1 for gatename, values in dict_of_circuit.items() if len(values) > 5])
@@ -94,9 +95,20 @@ def main():
 
     n = 2
     '''
+=======
+	'''
+	parameters = create_parameters_array(dict_of_circuit)
+	num_of_gates = sum([1 for gatename,values in dict_of_circuit.items() if len(values) > 5])
+	bounds = ((0,None),) * (num_of_gates*4) # You need a bound for every parameter, each gate has 4 parameters ~
+	res = minimize(circuit_forward_prop, parameters, args=dict_of_circuit, method='L-BFGS-B', bounds=bounds, options={'disp': False})
+	
+	dict_of_target = convert_parameter_array_to_tuples(res.x,copy.deepcopy(dict_of_circuit))
+	'''
+
+	n = 2
+>>>>>>> parent of 36186b9... Outputs the repressors, the operations, and the percentage gain in score to output.txt
 	cleaned = pickle.load(open( "cleaned.p", "rb" ) )
 	dict_of_target = cleaned
-	'''
 
     newvals, chosen_operations, new_score, best_dict = choose_operations(
         dict_of_circuit, dict_of_target)
@@ -111,6 +123,7 @@ def main():
     gate_scores = sorted([(key, val['score']) for key, val in new_dict_of_circuit.items() if len(
         val) > 5 and len(chosen_operations[key]) > 0], key=lambda t: t[1], reverse=True)
 
+<<<<<<< HEAD
     chosen_gates = []
     if len(gate_scores) > n:
         chosen_gates = gate_scores[:n]
@@ -122,12 +135,20 @@ def main():
 
     for gate, score in chosen_gates:
         new_best_dict.update({gate: best_dict_gate[gate]})
+=======
+	for gate,score in chosen_gates:
+		print("Name of gate:", gate)
+		print("Operations:")
+		for operation in chosen_operations:
+			print(operation,end=", ")
+>>>>>>> parent of 36186b9... Outputs the repressors, the operations, and the percentage gain in score to output.txt
 
         print("Name of gate:", gate, file=outfile)
         print("Operations:", file=outfile)
         for operation in chosen_operations:
             print(operation, end=", ", file=outfile)
 
+<<<<<<< HEAD
         print()
 
     best_parameters = create_parameters_array(new_best_dict)
@@ -138,6 +159,11 @@ def main():
     print("New score:", new_score, file=outfile)
     print("Percentage Gain:", (new_score - orig_score) /
           (sum(new_score + orig_score) - orig_score), file=outfile)
+=======
+	print("Original score:", orig_score)
+	print("New score:", new_score)
+	print("Gain:", new_score/orig_score)
+>>>>>>> parent of 36186b9... Outputs the repressors, the operations, and the percentage gain in score to output.txt
 
 if __name__ == '__main__':
     main()
