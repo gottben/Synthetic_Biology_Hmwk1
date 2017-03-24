@@ -8,11 +8,11 @@ from collections import defaultdict
 
 # GENERAL NOTE: May or may not have overdone it w the deepcopy everywhere, but I just wanted to make sure that the original wouldn't get altered in any way
 def choose_operations(dict_of_circuit, dict_of_target):
-	init = [(gatename,values) for gatename,values in dict_of_circuit.items() if len(values) > 4]
-	input_info = dict([(gatename,values) for gatename,values in dict_of_circuit.items() if len(values) <= 4])
+	init = [(gatename,values) for gatename,values in dict_of_circuit.items() if len(values) > 5]
+	input_info = dict([(gatename,values) for gatename,values in dict_of_circuit.items() if len(values) <= 5])
 	ops = [change_slope, stretch, change_promoter, change_rbs]
 
-	weights = [0.15, 0.15, 0.35, 0.35] # You want it to be more likely to choose change_promoter & change_rbs, so it's weighted more, we may want to play around w this
+	weights = [0.19,0.01,0.4,0.4] # You want it to be more likely to choose change_promoter & change_rbs, so it's weighted more, we may want to play around w this
 
 	chosen = defaultdict(list) # key = name of gate, values = list of operations performed on it & the x value
 
@@ -24,11 +24,12 @@ def choose_operations(dict_of_circuit, dict_of_target):
 	best_score = -1*circuit_forward_prop(best_dict,copy.deepcopy(dict_of_circuit))
 
 	for idx,rpr in enumerate(copy.deepcopy(init)):
-		for i in range(1,100000): # Replace w convergence fxn and while loop
+		loop_counter = 0
+		while is_converged and loop_counter <= 1000: # Replace w convergence fxn and while loop
 			current_target = dict_of_target[rpr[0]] #rpr[0] is the gatename of the rpr that we're currently attempting to modify
 			op = np.random.choice(ops, p=weights)
 
-			pot_rpr, current_chosen = op(copy.deepcopy(best_rprs[idx]),current_target)
+			pot_rpr, current_chosen = op(copy.deepcopy(best_rprs[idx]),current_target,dict_of_circuit)
 
 			if current_chosen == ():
 				continue
@@ -45,23 +46,34 @@ def choose_operations(dict_of_circuit, dict_of_target):
 				print(current_chosen)
 
 				best_rprs[idx] = pot_rpr
-				print("Iterate:",best_rprs)
+				#print("Iterate:",best_rprs)
 				chosen[rpr[0]].append(current_chosen)
 				best_score = new_score
 
-	return best_rprs, chosen, new_score
+			loop_counter += 1
 
+	print("Loop counter:", loop_counter)
+	return best_rprs, chosen, best_score
+
+def is_converged(rpr,target):
+	rpr_array = np.array([rpr['n'], rpr['k'], rpr['ymax'], rpr['ymin']])
+	target_array = np.array([target['n'], target['k'], target['ymax'], target['ymin']])
+	print(abs(rpr_array-target_array))
+	return np.all(abs(rpr_array-target_array) > 0.0000001)
 
 def main():
-	'''
 	parameters = create_parameters_array(dict_of_circuit)
-	num_of_gates = sum([1 for gatename,values in dict_of_circuit.items() if len(values) > 4])
+	num_of_gates = sum([1 for gatename,values in dict_of_circuit.items() if len(values) > 5])
 	bounds = ((0,None),) * (num_of_gates*4) # You need a bound for every parameter, each gate has 4 parameters ~
-	res = minimize(circuit_forward_prop, parameters, args=dict_of_circuit, method='L-BFGS-B', bounds=bounds, options={'disp': True})
+	res = minimize(circuit_forward_prop, parameters, args=dict_of_circuit, method='L-BFGS-B', bounds=bounds, options={'disp': False})
+	
 	dict_of_target = convert_parameter_array_to_tuples(res.x,copy.deepcopy(dict_of_circuit))
 
 	'''
-	dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )
+	cleaned = pickle.load(open( "s.p", "rb" ) )
+	dict_of_target = cleaned
+	'''
+
 	newvals,chosen_operations,new_score = choose_operations(dict_of_circuit, dict_of_target)
 
 	orig_score = -1*circuit_forward_prop(dict_of_circuit,None)
@@ -71,5 +83,9 @@ def main():
 	print("Gain:", new_score/orig_score)
 
 if __name__ == '__main__':
-	#main()
-	dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )
+	main()
+	#dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )
+
+
+
+
