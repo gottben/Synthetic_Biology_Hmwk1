@@ -329,7 +329,7 @@ def stretch_x_value(TS, org_list, dict_of_circuit):
                     dict_of_circuit[ele[0]]['K'])**dict_of_circuit[ele[0]]['n']
         low = 1 + ((sum(ele[1][1])) /
                    dict_of_circuit[ele[0]]['K'])**dict_of_circuit[ele[0]]['n']
-        print(high, low)
+        #print(high, low)
         x = ((((TS * high) / low) * dict_of_circuit[ele[0]]['ymin'] * (low - 1)
               - dict_of_circuit[ele[0]]['ymin'] * (high - 1)) /
              ((dict_of_circuit[ele[0]]['ymax'] - ((TS * high) / low))
@@ -403,13 +403,13 @@ stretch_inputs = circuit_forward_prop_stretch_list(
     parameters, new_dict_of_circuit)
 org_stre_input = assign_x_values(stretch_inputs, circ_list)
 the_exes = stretch_x_value(328, org_stre_input, dict_of_circuit)
-print(the_exes)
+#print(the_exes)
 # -----------------------------------------------------------------------------------#
 # Recreates the genetic circuit using forward propagation          #
 # -----------------------------------------------------------------------------------#
 
 
-def circuit_forward_prop(parameters, dict_of_circuit):
+def circuit_forward_prop(parameters, dict_of_circuit,flag=False):
     global circ_list
 
     if isinstance(parameters, dict):
@@ -454,9 +454,13 @@ def circuit_forward_prop(parameters, dict_of_circuit):
         dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
         score = min(on_values) / max(off_values)
         dict_of_circuit[ele[1][0]]['score'] = score
-    print(score)
-    print(dict_of_circuit[ele[1][0]]['score'])
-    return -1 * score
+    #print(score)
+    #print(dict_of_circuit[ele[1][0]]['score'])
+
+    if not flag:
+        return -1 * score
+    else:
+        return -1 * score, dict_of_circuit
 
 
 # ---------------------------------------------------------------------------#

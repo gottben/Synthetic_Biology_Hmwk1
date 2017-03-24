@@ -77,7 +77,9 @@ def main():
 
 	newvals,chosen_operations,new_score, best_dict = choose_operations(dict_of_circuit, dict_of_target)
 	orig_score= -1*circuit_forward_prop(dict_of_circuit,None)
-	new_score, new_dict_of_circuit = -1*circuit_forward_prop(best_dict,None,flag=True)
+
+	best_parameters = create_parameters_array(best_dict)
+	new_score, new_dict_of_circuit = -1*circuit_forward_prop(best_parameters,None,flag=True)
 
 	# Gets the first n repressors with the highest scores that have operations performed on them
 	gate_scores = sorted([(key,val['score']) for key,val in new_dict_of_circuit.items() if len(val) > 5 and len(chosen_operations[key]) > 0], key = lambda t: t[1], reverse=True)	
