@@ -4,7 +4,7 @@ import pickle
 from Cello_scorer import *
 from operations import *
 import copy
-from collections import defaultdict
+from collections import defaultdict,counter
 
 # GENERAL NOTE: May or may not have overdone it w the deepcopy everywhere, but I just wanted to make sure that the original wouldn't get altered in any way
 def choose_operations(dict_of_circuit, dict_of_target):
@@ -36,16 +36,17 @@ def choose_operations(dict_of_circuit, dict_of_target):
 
 			pot_best_rprs = copy.deepcopy(best_rprs)
 			pot_best_rprs[idx] = pot_rpr
-			best_dict = dict(pot_best_rprs)
-			best_dict.update(input_info)
+			pot_best_dict = dict(pot_best_rprs)
+			pot_best_dict.update(input_info)
 
-			new_score = -1*circuit_forward_prop(best_dict,copy.deepcopy(dict_of_circuit))
+			new_score = -1*circuit_forward_prop(pot_best_dict,None)
 
-			if new_score > best_score + 10**-4 and np.isfinite(new_score):
+			if new_score > best_score + 10**-2 and np.isfinite(new_score):
 				print("Score:", new_score)
 				print(current_chosen)
 
 				best_rprs[idx] = pot_rpr
+				best_dict = pot_best_dict
 				#print("Iterate:",best_rprs)
 				chosen[rpr[0]].append(current_chosen)
 				best_score = new_score
@@ -53,30 +54,47 @@ def choose_operations(dict_of_circuit, dict_of_target):
 			loop_counter += 1
 
 	print("Loop counter:", loop_counter)
-	return best_rprs, chosen, best_score
+	return best_rprs, chosen, best_score,best_dict
 
 def is_converged(rpr,target):
 	rpr_array = np.array([rpr['n'], rpr['k'], rpr['ymax'], rpr['ymin']])
 	target_array = np.array([target['n'], target['k'], target['ymax'], target['ymin']])
-	print(abs(rpr_array-target_array))
 	return np.all(abs(rpr_array-target_array) > 0.0000001)
 
 def main():
+	'''
 	parameters = create_parameters_array(dict_of_circuit)
 	num_of_gates = sum([1 for gatename,values in dict_of_circuit.items() if len(values) > 5])
 	bounds = ((0,None),) * (num_of_gates*4) # You need a bound for every parameter, each gate has 4 parameters ~
 	res = minimize(circuit_forward_prop, parameters, args=dict_of_circuit, method='L-BFGS-B', bounds=bounds, options={'disp': False})
 	
 	dict_of_target = convert_parameter_array_to_tuples(res.x,copy.deepcopy(dict_of_circuit))
-
 	'''
-	cleaned = pickle.load(open( "s.p", "rb" ) )
+
+	n = 2
+	cleaned = pickle.load(open( "cleaned.p", "rb" ) )
 	dict_of_target = cleaned
-	'''
 
-	newvals,chosen_operations,new_score = choose_operations(dict_of_circuit, dict_of_target)
+	newvals,chosen_operations,new_score, best_dict = choose_operations(dict_of_circuit, dict_of_target)
+	orig_score= -1*circuit_forward_prop(dict_of_circuit,None)
+	new_score, new_dict_of_circuit = -1*circuit_forward_prop(best_dict,None,flag=True)
 
-	orig_score = -1*circuit_forward_prop(dict_of_circuit,None)
+	# Gets the first n repressors with the highest scores that have operations performed on them
+	gate_scores = sorted([(key,val['score']) for key,val in new_dict_of_circuit.items() if len(val) > 5 and len(chosen_operations[key]) > 0], key = lambda t: t[1], reverse=True)	
+	
+	chosen_gates = []
+	if len(gate_scores) > n:
+		chosen_gates = gate_scores[:n]
+	else:
+		chosen_gates = gate_scores
+
+	for gate,score in chosen_gates:
+		print("Name of gate:", gate)
+		print("Operations:")
+		for operation in chosen_operations:
+			print(operation,end=", ")
+
+		print()
 
 	print("Original score:", orig_score)
 	print("New score:", new_score)
