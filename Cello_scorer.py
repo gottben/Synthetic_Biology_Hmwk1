@@ -434,6 +434,7 @@ def circuit_forward_prop(parameters, dict_of_circuit,flag=False):
                     input_list = [(dict_of_circuit[item]['ymin'],
                                    dict_of_circuit[item]['ymax'])]
                 the_input = [x for t in input_list for x in t]
+                
                 x_list = list(combinations(the_input, int(len(the_input) / 2)))
                 for it in input_list:
                     if it in x_list:
