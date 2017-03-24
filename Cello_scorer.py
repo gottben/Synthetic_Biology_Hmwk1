@@ -329,15 +329,14 @@ def stretch_x_value(TS, org_list, dict_of_circuit):
                     dict_of_circuit[ele[0]]['K'])**dict_of_circuit[ele[0]]['n']
         low = 1 + ((sum(ele[1][1])) /
                    dict_of_circuit[ele[0]]['K'])**dict_of_circuit[ele[0]]['n']
-        print(high, low)
         x = ((((TS * high) / low) * dict_of_circuit[ele[0]]['ymin'] * (low - 1)
               - dict_of_circuit[ele[0]]['ymin'] * (high - 1)) /
              ((dict_of_circuit[ele[0]]['ymax'] - ((TS * high) / low))
-              * dict_of_circuit[ele[0]]['ymax']))**(1/2)
+              * dict_of_circuit[ele[0]]['ymax']))**(1 / 2)
         x_list += [(ele[0], x)]
     return x_list
 
-print(dict_of_circuit)
+
 def circuit_forward_prop_stretch_list(parameters, a_dict):
     global circ_list
     stretch_inputs = []
@@ -403,7 +402,6 @@ stretch_inputs = circuit_forward_prop_stretch_list(
     parameters, new_dict_of_circuit)
 org_stre_input = assign_x_values(stretch_inputs, circ_list)
 the_exes = stretch_x_value(328, org_stre_input, dict_of_circuit)
-print(the_exes)
 # -----------------------------------------------------------------------------------#
 # Recreates the genetic circuit using forward propagation          #
 # -----------------------------------------------------------------------------------#
@@ -411,49 +409,65 @@ print(the_exes)
 
 def circuit_forward_prop(parameters, dict_of_circuit):
     global circ_list
-
+    score = 0
+    a_dict = deepcopy(dict_of_circuit)
     if isinstance(parameters, dict):
         dict_of_circuit = parameters
     else:
         dict_of_circuit = (convert_parameter_array_to_tuples(
             parameters, dict_of_circuit))
-
     for ele in circ_list:
-        count = 1
-        for item in ele[1]:
-            if item != ele[1][0]:
-                count += 1
-                y_min = dict_of_circuit[ele[1][0]]['ymin']
-                y_max = dict_of_circuit[ele[1][0]]['ymax']
-                k = dict_of_circuit[ele[1][0]]['K']
-                n = dict_of_circuit[ele[1][0]]['n']
-                if count > 2:
-                    input_list += [(dict_of_circuit[item]['ymin'],
-                                    dict_of_circuit[item]['ymax'])]
-                else:
-                    input_list = [(dict_of_circuit[item]['ymin'],
-                                   dict_of_circuit[item]['ymax'])]
-                the_input = [x for t in input_list for x in t]
-                x_list = list(combinations(the_input, int(len(the_input) / 2)))
-                for it in input_list:
-                    if it in x_list:
-                        x_list.remove(it)
-                if len(x_list) == 2:
-                    x_list += x_list
-                on_values = []
-                off_values = []
-                for b_x in range(0, len(x_list)):
-                    x = sum(x_list[b_x])
-                    the_y = y_min + (y_max - y_min) / (1 + (x / k)**n)
-                    if the_y > y_min*2:
-                        on_values += [the_y]
-                    elif the_y < y_max/2:
-                        off_values += [the_y]
-
-        dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
-        dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
-        score = min(on_values) / max(off_values)
-        dict_of_circuit[ele[1][0]]['score'] = score
+        try:
+            count = 1
+            for item in ele[1]:
+                if item != ele[1][0]:
+                    count += 1
+                    y_min = dict_of_circuit[ele[1][0]]['ymin']
+                    y_max = dict_of_circuit[ele[1][0]]['ymax']
+                    k = dict_of_circuit[ele[1][0]]['K']
+                    n = dict_of_circuit[ele[1][0]]['n']
+                    if count > 2:
+                        input_list += [(dict_of_circuit[item]['ymin'],
+                                        dict_of_circuit[item]['ymax'])]
+                    else:
+                        input_list = [(dict_of_circuit[item]['ymin'],
+                                       dict_of_circuit[item]['ymax'])]
+                    the_input = [x for t in input_list for x in t]
+                    x_list = list(combinations(
+                        the_input, int(len(the_input) / 2)))
+            for it in input_list:
+                if it in x_list:
+                    x_list.remove(it)
+            if len(x_list) == 2:
+                x_list += x_list
+            on_values = []
+            off_values = []
+            highs = dict_of_circuit[ele[1][0]]['logic']
+            lows = dict_of_circuit[ele[1][0]]['logic']
+            highs = highs.count(1)
+            lows = lows.count(0)
+            for b_x in x_list:
+                x = sum(b_x)
+                the_y = y_min + (y_max - y_min) / (1 + (x / k)**n)
+                if the_y > y_max / 2:
+                    on_values += [the_y]
+                elif the_y < y_min * 2:
+                    off_values += [the_y]
+            if len(on_values) > highs:
+                return -1 * score
+            elif len(off_values) > lows:
+                return -1 * score
+            try:
+                dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
+                dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
+                score = min(on_values) / max(off_values)
+                len_circ_list = len(circ_list)
+                if ele[1][0] not in circ_list[len_circ_list - 1][1]:
+                    dict_of_circuit[ele[1][0]]['score'] = score
+            except:
+                break
+        except:
+            score = dict_of_circuit[ele[1][0]]['score']
     print(score)
     print(dict_of_circuit[ele[1][0]]['score'])
     return -1 * score
@@ -462,5 +476,6 @@ def circuit_forward_prop(parameters, dict_of_circuit):
 # ---------------------------------------------------------------------------#
 # Run the functions that were made previously                  #
 # ---------------------------------------------------------------------------#
-parameters = create_parameters_array(dict_of_circuit)
-circuit_forward_prop(parameters, dict_of_circuit)
+# print(dict_of_circuit)
+# parameters = create_parameters_array(dict_of_circuit)
+# circuit_forward_prop(parameters, dict_of_circuit)
