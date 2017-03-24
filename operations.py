@@ -174,7 +174,15 @@ def signal_bounds(out, inp, val):  # Attempting to model this function after Fig
     elif val == 2:  # Case 2: current rpr is the input
         return (f, e)
 
+<<<<<<< HEAD
 ''' Get lower and upper bounds for the on threshold and off threshold of a particular gate '''
+=======
+# Finds the optimal x value that allows the rpr parameter to get as close to the target as possible w/o changing how it affects the other ones in the circuit
+def find_optimal_x(rpr, target, param, stretch, upper_bound, lower_bound, init_x=1):
+	cons = ({'type': 'ineq', 'fun': lambda x, rpr, lower_bound, param, stretch: min(on_threshold(copy.deepcopy(rpr),x[0],param,stretch),off_threshold(copy.deepcopy(rpr),x[0],param,stretch)) - lower_bound, 'args': (rpr, lower_bound, param, stretch)},
+			{'type': 'ineq', 'fun': lambda x, rpr, upper_bound, param, stretch: upper_bound - max(on_threshold(copy.deepcopy(rpr),x[0],param,stretch),off_threshold(copy.deepcopy(rpr),x[0],param,stretch)), 'args': (rpr, upper_bound, param, stretch)},
+			{'type': 'ineq', 'fun': lambda x: x})
+>>>>>>> 36186b94d86537f3b9579c9114611968d165c748
 
 
 def does_signal_match(rpr, dict_of_circuit):

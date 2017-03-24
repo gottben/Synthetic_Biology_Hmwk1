@@ -329,6 +329,10 @@ def stretch_x_value(TS, org_list, dict_of_circuit):
                     dict_of_circuit[ele[0]]['K'])**dict_of_circuit[ele[0]]['n']
         low = 1 + ((sum(ele[1][1])) /
                    dict_of_circuit[ele[0]]['K'])**dict_of_circuit[ele[0]]['n']
+<<<<<<< HEAD
+=======
+        #print(high, low)
+>>>>>>> 36186b94d86537f3b9579c9114611968d165c748
         x = ((((TS * high) / low) * dict_of_circuit[ele[0]]['ymin'] * (low - 1)
               - dict_of_circuit[ele[0]]['ymin'] * (high - 1)) /
              ((dict_of_circuit[ele[0]]['ymax'] - ((TS * high) / low))
@@ -402,12 +406,16 @@ stretch_inputs = circuit_forward_prop_stretch_list(
     parameters, new_dict_of_circuit)
 org_stre_input = assign_x_values(stretch_inputs, circ_list)
 the_exes = stretch_x_value(328, org_stre_input, dict_of_circuit)
+<<<<<<< HEAD
+=======
+#print(the_exes)
+>>>>>>> 36186b94d86537f3b9579c9114611968d165c748
 # -----------------------------------------------------------------------------------#
 # Recreates the genetic circuit using forward propagation          #
 # -----------------------------------------------------------------------------------#
 
 
-def circuit_forward_prop(parameters, dict_of_circuit):
+def circuit_forward_prop(parameters, dict_of_circuit,flag=False):
     global circ_list
     score = 0
     a_dict = deepcopy(dict_of_circuit)
@@ -417,6 +425,7 @@ def circuit_forward_prop(parameters, dict_of_circuit):
         dict_of_circuit = (convert_parameter_array_to_tuples(
             parameters, dict_of_circuit))
     for ele in circ_list:
+<<<<<<< HEAD
         try:
             count = 1
             for item in ele[1]:
@@ -471,6 +480,51 @@ def circuit_forward_prop(parameters, dict_of_circuit):
     print(score)
     print(dict_of_circuit[ele[1][0]]['score'])
     return -1 * score
+=======
+        count = 1
+        for item in ele[1]:
+            if item != ele[1][0]:
+                count += 1
+                y_min = dict_of_circuit[ele[1][0]]['ymin']
+                y_max = dict_of_circuit[ele[1][0]]['ymax']
+                k = dict_of_circuit[ele[1][0]]['K']
+                n = dict_of_circuit[ele[1][0]]['n']
+                if count > 2:
+                    input_list += [(dict_of_circuit[item]['ymin'],
+                                    dict_of_circuit[item]['ymax'])]
+                else:
+                    input_list = [(dict_of_circuit[item]['ymin'],
+                                   dict_of_circuit[item]['ymax'])]
+                the_input = [x for t in input_list for x in t]
+                
+                x_list = list(combinations(the_input, int(len(the_input) / 2)))
+                for it in input_list:
+                    if it in x_list:
+                        x_list.remove(it)
+                if len(x_list) == 2:
+                    x_list += x_list
+                on_values = []
+                off_values = []
+                for b_x in range(0, len(x_list)):
+                    x = sum(x_list[b_x])
+                    the_y = y_min + (y_max - y_min) / (1 + (x / k)**n)
+                    if the_y > y_min*2:
+                        on_values += [the_y]
+                    elif the_y < y_max/2:
+                        off_values += [the_y]
+
+        dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
+        dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
+        score = min(on_values) / max(off_values)
+        dict_of_circuit[ele[1][0]]['score'] = score
+    #print(score)
+    #print(dict_of_circuit[ele[1][0]]['score'])
+
+    if not flag:
+        return -1 * score
+    else:
+        return -1 * score, dict_of_circuit
+>>>>>>> 36186b94d86537f3b9579c9114611968d165c748
 
 
 # ---------------------------------------------------------------------------#
