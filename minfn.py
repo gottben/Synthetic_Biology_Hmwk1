@@ -4,7 +4,7 @@ import pickle
 from Cello_scorer import *
 from operations import *
 import copy
-from collections import defaultdict,counter
+from collections import defaultdict, Counter
 
 # GENERAL NOTE: May or may not have overdone it w the deepcopy everywhere, but I just wanted to make sure that the original wouldn't get altered in any way
 def choose_operations(dict_of_circuit, dict_of_target):
