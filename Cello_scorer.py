@@ -6,17 +6,38 @@ from requests.auth import HTTPBasicAuth
 from itertools import zip_longest
 import re
 from copy import deepcopy
+import sys
 
+
+UCF_file = 'gottbenn.UCF.json'
+# verilog_file = sys.argv[1]
+# num_of_repressors = sys.argv[3]
 
 # Setup the username and password for Cello Authentication
 username = 'gottbenn'
 password = '123456789'
 auth = HTTPBasicAuth(username, password)
 
+# -----------------------------------------------------------#
+# Create a circuit in Cello                                 #
+# -----------------------------------------------------------#
+
+# url = 'http://cellocad.org/submit'
+# ID = username + '_Circuit'
+# inputs = './resources/pycello/resources/Inputs.txt'
+# outputs = './resources/pycello/resources/Outputs.txt'
+# verilog_text = open(verilog_file, 'r').read()
+# inputs_text = open(inputs, 'r').read()
+# outputs_text = open(outputs, 'r').read()
+# params = {'id': ID, 'verilog_text': verilog_text, 'input_promoter_data':
+#           inputs_text, 'output_gene_data': outputs_text}
+# req = requests.post(url, auth=auth, params=params)
+# print(req.text)
+
 # ------------------------------------------------#
 #     UCF File processing                       #
 # -------------------------------------------------#
-with open('gottbenn.UCF.json') as initial_UCF:
+with open(UCF_file) as initial_UCF:
     original_UCF = json.load(initial_UCF)
 
 # We are going to grab all the repressor information from the UCF file.
@@ -397,17 +418,17 @@ def assign_x_values(stretch_inputs, circ_list):
         output += [(circ_list[index][1][0], stretch_inputs[index])]
     return output
 
-parameters = create_parameters_array(new_dict_of_circuit)
-stretch_inputs = circuit_forward_prop_stretch_list(
-    parameters, new_dict_of_circuit)
-org_stre_input = assign_x_values(stretch_inputs, circ_list)
-the_exes = stretch_x_value(328, org_stre_input, dict_of_circuit)
+# parameters = create_parameters_array(new_dict_of_circuit)
+# stretch_inputs = circuit_forward_prop_stretch_list(
+#     parameters, new_dict_of_circuit)
+# org_stre_input = assign_x_values(stretch_inputs, circ_list)
+# the_exes = stretch_x_value(328, org_stre_input, dict_of_circuit)
 # -----------------------------------------------------------------------------------#
 # Recreates the genetic circuit using forward propagation          #
 # -----------------------------------------------------------------------------------#
 
 
-def circuit_forward_prop(parameters, dict_of_circuit):
+def circuit_forward_prop(parameters, dict_of_circuit, flag=False):
     global circ_list
     score = 0
     a_dict = deepcopy(dict_of_circuit)
@@ -454,9 +475,16 @@ def circuit_forward_prop(parameters, dict_of_circuit):
                 elif the_y < y_min * 2:
                     off_values += [the_y]
             if len(on_values) > highs:
-                return -1 * score
+                if not flag:
+                    return -1 * score
+                else:
+                    return -1 * score, dict_of_circuit
             elif len(off_values) > lows:
-                return -1 * score
+                if not flag:
+                    return -1 * score
+                else:
+                    return -1 * score, dict_of_circuit
+
             try:
                 dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
                 dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
@@ -468,9 +496,10 @@ def circuit_forward_prop(parameters, dict_of_circuit):
                 break
         except:
             score = dict_of_circuit[ele[1][0]]['score']
-    print(score)
-    print(dict_of_circuit[ele[1][0]]['score'])
-    return -1 * score
+    if not flag:
+        return -1 * score
+    else:
+        return score, dict_of_circuit
 
 
 # ---------------------------------------------------------------------------#

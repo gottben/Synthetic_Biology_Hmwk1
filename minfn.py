@@ -71,7 +71,7 @@ def choose_operations(dict_of_circuit, dict_of_target):
             loop_counter += 1
 
     print("Loop counter:", loop_counter)
-    return best_rprs, chosen, best_score
+    return best_rprs, chosen, best_score,  best_dict
 
 
 def is_converged(rpr, target):
@@ -83,31 +83,67 @@ def is_converged(rpr, target):
 
 
 def main():
+    a_dict = deepcopy(dict_of_circuit)
+    L_dict = deepcopy(dict_of_circuit)
     parameters = create_parameters_array(dict_of_circuit)
     num_of_gates = sum(
         [1 for gatename, values in dict_of_circuit.items() if len(values) > 5])
     # You need a bound for every parameter, each gate has 4 parameters ~
     bounds = ((0, None),) * (num_of_gates * 4)
-    the_dict = deepcopy(dict_of_circuit)
-    res = minimize(circuit_forward_prop, parameters, args=the_dict,
+    res = minimize(circuit_forward_prop, parameters, args=dict_of_circuit,
                    method='L-BFGS-B', bounds=bounds, options={'disp': False})
 
     dict_of_target = convert_parameter_array_to_tuples(
         res.x, copy.deepcopy(dict_of_circuit))
 
-    '''
-	cleaned = pickle.load(open( "s.p", "rb" ) )
-	dict_of_target = cleaned
-	'''
+    n = 2
 
-    newvals, chosen_operations, new_score = choose_operations(
+    orig_score = -1 * circuit_forward_prop(L_dict, None)
+
+    newvals, chosen_operations, new_score, best_dict = choose_operations(
         dict_of_circuit, dict_of_target)
+    best_parameters = create_parameters_array(best_dict)
+    new_score, new_dict_of_circuit = circuit_forward_prop(
+        best_dict, best_dict, flag=True)
+    # Gets the first n repressors with the highest scores that have operations
+    # performed on them
 
-    orig_score = -1 * circuit_forward_prop(dict_of_circuit, None)
-    print("Original score:", orig_score)
-    print("New score:", new_score)
-    print("Gain:", new_score / orig_score)
+    gate_scores = sorted([(key, val['score']) for key,
+                          val in new_dict_of_circuit.items() if len(
+        val) > 5 and len(chosen_operations[key]) > 0],
+        key=lambda t: t[1], reverse=True)
+
+    chosen_gates = []
+    print(gate_scores)
+    if len(gate_scores) > n:
+        chosen_gates = gate_scores[:n]
+    else:
+        chosen_gates = gate_scores
+
+    print(chosen_gates)
+    outfile = open('output.txt', 'w')
+    new_best_dict = {}
+    for gate, score in chosen_gates:
+        new_best_dict.update({gate: best_dict[gate]})
+        print("Name of gate:", gate, file=outfile)
+        print("Operations:", file=outfile)
+        for operation in chosen_operations:
+            print(chosen_operations[gate], end=", ", file=outfile)
+
+    for gate in a_dict.keys():
+        if gate in new_best_dict:
+            pass
+        else:
+            new_best_dict.update({gate: a_dict[gate]})
+    print(new_best_dict)
+    best_parameters = create_parameters_array(new_best_dict)
+    new_score, new_dict_of_circuit = circuit_forward_prop(
+        new_best_dict, None, flag=True)
+    percent_gain = ((new_score - orig_score) / orig_score) * 100
+    print("Original score:", orig_score, file=outfile)
+    print("New score:", new_score, file=outfile)
+    print("Percentage Gain:", percent_gain, "%", file=outfile)
 
 if __name__ == '__main__':
     main()
-    #dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )
+    # dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )
