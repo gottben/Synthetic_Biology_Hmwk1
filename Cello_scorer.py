@@ -407,7 +407,7 @@ the_exes = stretch_x_value(328, org_stre_input, dict_of_circuit)
 # -----------------------------------------------------------------------------------#
 
 
-def circuit_forward_prop(parameters, dict_of_circuit):
+def circuit_forward_prop(parameters, dict_of_circuit,flag=False):
     global circ_list
     score = 0
     a_dict = deepcopy(dict_of_circuit)
@@ -453,10 +453,18 @@ def circuit_forward_prop(parameters, dict_of_circuit):
                     on_values += [the_y]
                 elif the_y < y_min * 2:
                     off_values += [the_y]
+
             if len(on_values) > highs:
-                return -1 * score
+                if not flag:
+                    return -1 * score
+                else:
+                    return -1 * score, dict_of_circuit
             elif len(off_values) > lows:
-                return -1 * score
+                if not flag:
+                    return -1 * score
+                else:
+                    return -1 * score, dict_of_circuit
+
             try:
                 dict_of_circuit[ele[1][0]]['ymin'] = max(off_values)
                 dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
@@ -468,9 +476,12 @@ def circuit_forward_prop(parameters, dict_of_circuit):
                 break
         except:
             score = dict_of_circuit[ele[1][0]]['score']
-    print(score)
-    print(dict_of_circuit[ele[1][0]]['score'])
-    return -1 * score
+
+    if not flag:
+        return -1 * score
+    else:
+        return -1 * score, dict_of_circuit
+
 
 
 # ---------------------------------------------------------------------------#
