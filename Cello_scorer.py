@@ -9,9 +9,9 @@ from copy import deepcopy
 import sys
 
 
-UCF_file = 'gottbenn.UCF.json'
-# verilog_file = sys.argv[1]
-# num_of_repressors = sys.argv[3]
+UCF_file = sys.argv[2]
+verilog_file = sys.argv[1]
+n = int(sys.argv[3])
 
 # Setup the username and password for Cello Authentication
 username = 'gottbenn'
@@ -22,17 +22,17 @@ auth = HTTPBasicAuth(username, password)
 # Create a circuit in Cello                                 #
 # -----------------------------------------------------------#
 
-# url = 'http://cellocad.org/submit'
-# ID = username + '_Circuit'
-# inputs = './resources/pycello/resources/Inputs.txt'
-# outputs = './resources/pycello/resources/Outputs.txt'
-# verilog_text = open(verilog_file, 'r').read()
-# inputs_text = open(inputs, 'r').read()
-# outputs_text = open(outputs, 'r').read()
-# params = {'id': ID, 'verilog_text': verilog_text, 'input_promoter_data':
-#           inputs_text, 'output_gene_data': outputs_text}
-# req = requests.post(url, auth=auth, params=params)
-# print(req.text)
+url = 'http://cellocad.org/submit'
+ID = username + '_Circuit'
+inputs = './resources/pycello/resources/Inputs.txt'
+outputs = './resources/pycello/resources/Outputs.txt'
+verilog_text = open(verilog_file, 'r').read()
+inputs_text = open(inputs, 'r').read()
+outputs_text = open(outputs, 'r').read()
+params = {'id': ID, 'verilog_text': verilog_text, 'input_promoter_data':
+          inputs_text, 'output_gene_data': outputs_text}
+req = requests.post(url, auth=auth, params=params)
+print(req.text)
 
 # ------------------------------------------------#
 #     UCF File processing                       #
@@ -490,12 +490,13 @@ def circuit_forward_prop(parameters, dict_of_circuit, flag=False):
                 dict_of_circuit[ele[1][0]]['ymax'] = min(on_values)
                 score = min(on_values) / max(off_values)
                 len_circ_list = len(circ_list)
-                if ele[1][0] not in circ_list[len_circ_list - 1][1]:
-                    dict_of_circuit[ele[1][0]]['score'] = score
+                dict_of_circuit[ele[1][0]]['score'] = score
             except:
                 break
+                print("did I break?")
         except:
             score = dict_of_circuit[ele[1][0]]['score']
+            print("What about here?")
     if not flag:
         return -1 * score
     else:

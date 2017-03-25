@@ -4,7 +4,7 @@ import pickle
 from Cello_scorer import *
 from operations import *
 import copy
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 # GENERAL NOTE: May or may not have overdone it w the deepcopy everywhere,
 # but I just wanted to make sure that the original wouldn't get altered in
@@ -24,7 +24,6 @@ def choose_operations(dict_of_circuit, dict_of_target):
 
     # key = name of gate, values = list of operations performed on it & the x
     # value
-    the_dict = deepcopy(dict_of_circuit)
     chosen = defaultdict(list)
 
     # Make sure that it's a copy of the list and not the actual list
@@ -32,59 +31,55 @@ def choose_operations(dict_of_circuit, dict_of_target):
 
     # Converting to parameter form and then to tuple form just to get the
     # score lowkey seems like alot but it works for now
-    best_params = create_parameters_array(the_dict)
-    best_dict = convert_parameter_array_to_tuples(best_params, the_dict)
+    best_params = create_parameters_array(dict_of_circuit)
+    best_dict = convert_parameter_array_to_tuples(best_params, dict_of_circuit)
     best_score = -1 * \
-        circuit_forward_prop(best_dict, copy.deepcopy(the_dict))
+        circuit_forward_prop(best_dict, copy.deepcopy(dict_of_circuit))
 
     for idx, rpr in enumerate(copy.deepcopy(init)):
         loop_counter = 0
-        while is_converged and loop_counter <= 1000:  # Replace w convergence fxn and while loop
+        while is_converged and loop_counter <= 10:  # Replace w convergence fxn and while loop
             # rpr[0] is the gatename of the rpr that we're currently attempting
             # to modify
             current_target = dict_of_target[rpr[0]]
             op = np.random.choice(ops, p=weights)
 
             pot_rpr, current_chosen = op(copy.deepcopy(
-                best_rprs[idx]), current_target, the_dict)
+                best_rprs[idx]), current_target, dict_of_circuit)
 
             if current_chosen == ():
                 continue
 
             pot_best_rprs = copy.deepcopy(best_rprs)
             pot_best_rprs[idx] = pot_rpr
-            best_dict = dict(pot_best_rprs)
-            best_dict.update(input_info)
+            pot_best_dict = dict(pot_best_rprs)
+            pot_best_dict.update(input_info)
 
-            new_score = -1 * \
-                circuit_forward_prop(best_dict, copy.deepcopy(the_dict))
+            new_score = -1 * circuit_forward_prop(pot_best_dict, None)
 
-            if new_score > best_score + 10**-4 and np.isfinite(new_score):
+            if new_score > best_score + 10**-2 and np.isfinite(new_score):
                 print("Score:", new_score)
                 print(current_chosen)
 
                 best_rprs[idx] = pot_rpr
+                best_dict = pot_best_dict
                 # print("Iterate:",best_rprs)
                 chosen[rpr[0]].append(current_chosen)
                 best_score = new_score
 
             loop_counter += 1
 
-    print("Loop counter:", loop_counter)
-    return best_rprs, chosen, best_score,  best_dict
+    return best_rprs, chosen, best_score, best_dict
 
 
 def is_converged(rpr, target):
     rpr_array = np.array([rpr['n'], rpr['k'], rpr['ymax'], rpr['ymin']])
     target_array = np.array(
         [target['n'], target['k'], target['ymax'], target['ymin']])
-    print(abs(rpr_array - target_array))
     return np.all(abs(rpr_array - target_array) > 0.0000001)
 
 
 def main():
-    a_dict = deepcopy(dict_of_circuit)
-    L_dict = deepcopy(dict_of_circuit)
     parameters = create_parameters_array(dict_of_circuit)
     num_of_gates = sum(
         [1 for gatename, values in dict_of_circuit.items() if len(values) > 5])
@@ -98,8 +93,24 @@ def main():
 
     n = 2
 
-    orig_score = -1 * circuit_forward_prop(L_dict, None)
 
+def main():
+    UCF_file = sys.argv[2]
+    verilog_file = sys.argv[1]
+    n = int(sys.argv[3])
+    Z_dict = deepcopy(dict_of_circuit)
+    L_dict = deepcopy(dict_of_circuit)
+    parameters = create_parameters_array(dict_of_circuit)
+    num_of_gates = sum(
+        [1 for gatename, values in dict_of_circuit.items() if len(values) > 5])
+    # You need a bound for every parameter, each gate has 4 parameters ~
+    bounds = ((0, None),) * (num_of_gates * 4)
+    res = minimize(circuit_forward_prop, parameters, args=dict_of_circuit,
+                   method='L-BFGS-B', bounds=bounds, options={'disp': False})
+    dict_of_target = convert_parameter_array_to_tuples(
+        res.x, copy.deepcopy(dict_of_circuit))
+
+    orig_score = -1 * circuit_forward_prop(L_dict, None)
     newvals, chosen_operations, new_score, best_dict = choose_operations(
         dict_of_circuit, dict_of_target)
     best_parameters = create_parameters_array(best_dict)
@@ -108,19 +119,18 @@ def main():
     # Gets the first n repressors with the highest scores that have operations
     # performed on them
 
-    gate_scores = sorted([(key, val['score']) for key,
-                          val in new_dict_of_circuit.items() if len(
-        val) > 5 and len(chosen_operations[key]) > 0],
-        key=lambda t: t[1], reverse=True)
+    gate_items = []
+    for key, value in new_dict_of_circuit.items():
+        if len(key) > 5:
+            gate_items += [(key, value['score'])]
 
+    gate_items = sorted(gate_items, key=lambda x: x[1])
     chosen_gates = []
-    print(gate_scores)
-    if len(gate_scores) > n:
-        chosen_gates = gate_scores[:n]
+    if len(gate_items) > n:
+        chosen_gates = gate_items[:n]
     else:
-        chosen_gates = gate_scores
+        chosen_gates = gate_items
 
-    print(chosen_gates)
     outfile = open('output.txt', 'w')
     new_best_dict = {}
     for gate, score in chosen_gates:
@@ -130,13 +140,11 @@ def main():
         for operation in chosen_operations:
             print(chosen_operations[gate], end=", ", file=outfile)
 
-    for gate in a_dict.keys():
+    for gate in Z_dict.keys():
         if gate in new_best_dict:
             pass
         else:
-            new_best_dict.update({gate: a_dict[gate]})
-    print(new_best_dict)
-    best_parameters = create_parameters_array(new_best_dict)
+            new_best_dict.update({gate: Z_dict[gate]})
     new_score, new_dict_of_circuit = circuit_forward_prop(
         new_best_dict, None, flag=True)
     percent_gain = ((new_score - orig_score) / orig_score) * 100
@@ -144,6 +152,19 @@ def main():
     print("New score:", new_score, file=outfile)
     print("Percentage Gain:", percent_gain, "%", file=outfile)
 
+    for key in new_dict_of_circuit.items():
+        for info in range(23, 44):
+            if original_UCF[info]['gate_name'] == key[0]:
+                params = original_UCF[info]['parameters']
+                for x in range(0, len(params)):
+                    for k, v in new_dict_of_circuit[key[0]].items():
+                        if (original_UCF[info]['parameters'][x]['name'] ==
+                                k):
+                            (original_UCF[info]['parameters'][x][
+                                'value'] == v)
+
+    with open('final.UCF.json', 'w') as outfile:
+        json.dump(original_UCF, outfile)
 if __name__ == '__main__':
     main()
     # dict_of_target = pickle.load( open( "save_dict.p", "rb" ) )

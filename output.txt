@@ -1,5 +1,7 @@
-Name of gate: P3_PhlF
+Name of gate: A1_AmtR
 Operations:
-[('stronger_promoter', 1.0001)], [('stronger_promoter', 1.0001)], [('stronger_promoter', 1.0001)], Original score: 328.00453103986507
-New score: 697.5510275884758
-Percentage Gain: 112.66505842984733 %
+Name of gate: S2_SrpR
+Operations:
+Original score: 328.00453103986507
+New score: 338.129701657
+Percentage Gain: 3.08689961841 %
